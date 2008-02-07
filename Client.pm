@@ -32,7 +32,7 @@ our @EXPORT = qw(
     query
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Preloaded methods go here.
 
@@ -242,37 +242,48 @@ Net::Radius::Client - Pure-Perl, VSA-empowered RADIUS client
              
 =head1 ABSTRACT
 
-  The Net::Radius::Client package implements a single call, high-level 
-  RADIUS client.
+The Net::Radius::Client package implements a single call, high-level 
+RADIUS client.
 
 =head1 DESCRIPTION
 
-  The 'query' routine tries to deliver request to RADIUS server(s)
-  and returns its response whenever successful.
+The C<query> routine tries to deliver request to RADIUS server(s)
+and returns its response whenever successful.
 
-  RADIUS servers to query are represented as a hash carrying
-  network-scope details. See SYNOPSIS for more information.
+RADIUS servers to query are represented as a hash carrying
+network-scope details. See SYNOPSIS for more information.
 
-  RADIUS attribute-value pairs for both request and response
-  take shape of a two-dimentional hash-ref first indexed by 
-  attribute vendor ID (0 for IETF) and then by attribute name
-  (as econfigured in the "dictionary"). Since RADIUS protocol allows 
-  for multiple attributes of the same type in packet, value(s) of 
-  each attribute are kept in a list. See SYNOPSIS for guidance.
+RADIUS attribute-value pairs for both request and response
+take shape of a two-dimentional hash-ref first indexed by 
+attribute vendor ID (0 for IETF) and then by attribute name
+(as econfigured in the "dictionary"). Since RADIUS protocol allows 
+for multiple attributes of the same type in packet, value(s) of 
+each attribute are kept in a list. See SYNOPSIS for guidance.
 
-  The 'load' routine loads up RADIUS dictionary file, as specified
-  by its first parameter, and should be called once on startup.
-  
+The C<load> routine loads up RADIUS dictionary file, as specified
+by its first parameter, and should be called once on startup.
+
 =head2 EXPORT
 
-  load
-  query
+=over
+
+=item load
+
+=item query
+
+=back
 
 =head1 SEE ALSO
 
-  Net::Radius::Packet
-  Net::Radius::Dictionary
-  http://www.freeradius.org/rfc/
+=over
+
+=item L<Net::Radius::Packet>
+
+=item L<Net::Radius::Dictionary>
+
+=item L<http://www.freeradius.org/rfc/>
+
+=back
 
 =head1 AUTHOR
 

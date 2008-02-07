@@ -19,6 +19,7 @@ This module requires these other modules and libraries:
 
   Net::Radius::Packet
   Net::Radius::Dictionary
+  Net::Inet
   Net::UDP
 
 COPYRIGHT AND LICENCE
