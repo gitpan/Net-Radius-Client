@@ -1,11 +1,9 @@
 package Net::Radius::Client;
 
 use 5.008;
-use Net::Inet qw(:routines);
+use IO::Socket::INET;
 use Net::Radius::Dictionary;
 use Net::Radius::Packet;
-use Net::Gen qw(:af);
-use Net::UDP;
 use strict;
 use warnings;
 use Carp;
@@ -32,7 +30,8 @@ our @EXPORT = qw(
     query
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
+our $debug = 0;
 
 # Preloaded methods go here.
 
@@ -49,6 +48,9 @@ my $dict = undef;
 
 sub load {
     my ($d) = @_;
+    # Net::Radius::Dictionary pass silently if
+    # dictionary is not readable (seems like bug)
+    die "Couldn't read dictionary $d\n" unless (-r $d);
     $dict = new Net::Radius::Dictionary $d
         or die "Couldn't read dictionary: $!";
 }
@@ -80,9 +82,7 @@ sub query {
         }
     }
 
-    my $s = new Net::UDP or return ('', \%$retref);
-
-    my ($retries, $timeout);
+    my ($retries, $timeout, $rc);
 
     foreach my $host (keys %$servers) {
         foreach my $port (keys %{$servers->{$host}}) {
@@ -111,27 +111,35 @@ sub query {
                 $req->set_password($password, $servers->{$host}->{$port}->{'secret'});
             }
 
-#            $req->dump;
+            $req->dump if ($debug);
 
-            my $addr = pack_sockaddr_in(AF_INET, $port, gethostbyname($host));
-
-            my $pack = $req->pack;
+            my $pack = $req->pack; # Can generate error 'Unknown RADIUS tuples'
+                                   # if dictionary has not been loaded (bug?)
             if ($code ne 'Access-Request') {
                 $pack = auth_resp($pack,$servers->{$host}->{$port}->{'secret'});
             }
 
-            my $whence;
+            my $socket = new IO::Socket::INET->new(PeerAddr => $host,
+                                                   PeerPort => $port,
+                                                   Proto    => 'udp',
+                                                   Timeout  => $timeout);
 
             while($retries) {
-                $retries = $retries - 1;
+                $retries--;
 
-                $s->sendto($pack, $addr);
+                $rc = $socket->send($pack);
+                next if ($rc != length($pack));
 
-                if (not $s->select(1, 0, 0, $timeout)) {
-                    next;
-                }
+                # Timeout parametor has no effect to recv method;
+                # so we use select to detect timeout
+                my $rin = '';
+                vec($rin, fileno($socket), 1) = 1;
+                my $nfound = select($rin, undef, undef, $timeout);
+                next if ($nfound <= 0); # either timeout or end of file
 
-                $rec = $s->recv(undef, undef, $whence);
+                my $rec;
+                $rc = $socket->recv($rec, 4096); # RFC2866: 20<=size<=4095
+                next unless ($rc);
 
                 $rsp = new Net::Radius::Packet $dict, $rec;
 
@@ -145,11 +153,9 @@ sub query {
                     }
                 }
             
-#                $rsp->dump;
+                $rsp->dump if ($debug);
 
-                if ($whence ne $addr || $rsp->identifier != $ident) {
-                    next;
-                }
+                next if ($rsp->identifier != $ident);
 
                 if ($code eq 'Access-Request' and
                     $rsp->code ne 'Access-Accept' and
@@ -198,6 +204,8 @@ Net::Radius::Client - Pure-Perl, VSA-empowered RADIUS client
 
   load("dictionary");
 
+  # $Net::Radius::Client::debug = 1;
+
   my $servers = {
       '192.168.1.1' => { 
           1812 => { 
@@ -206,7 +214,7 @@ Net::Radius::Client - Pure-Perl, VSA-empowered RADIUS client
               'retries' => 3 
               }
       },
-      '192.168.1.1' => { 
+      '192.168.1.2' => { 
           1812 => { 
               'secret' => 'perl4sins', 
               'timeout' => 1, 
@@ -225,7 +233,7 @@ Net::Radius::Client - Pure-Perl, VSA-empowered RADIUS client
           } 
   };
                    
-  my ($code, $rsp) = query($servers, "Access-Request", $req);
+  my ($code, $respref) = query($servers, "Access-Request", $req);
 
   if ($code) {
       print $code . "\n";
@@ -256,7 +264,7 @@ network-scope details. See SYNOPSIS for more information.
 RADIUS attribute-value pairs for both request and response
 take shape of a two-dimentional hash-ref first indexed by 
 attribute vendor ID (0 for IETF) and then by attribute name
-(as econfigured in the "dictionary"). Since RADIUS protocol allows 
+(as configured in the "dictionary"). Since RADIUS protocol allows 
 for multiple attributes of the same type in packet, value(s) of 
 each attribute are kept in a list. See SYNOPSIS for guidance.
 
@@ -288,6 +296,7 @@ by its first parameter, and should be called once on startup.
 =head1 AUTHOR
 
 Ilya Etingof, E<lt>ilya@glas.netE<gt>
+Alexey Michurin, E<lt>alexey@michurin.com.ruE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

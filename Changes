@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::Radius::Client.
 
+0.03  Wed May 14 14:47:31 2008
+        - remove dependencies on deprecated component Net-ext
+        - base UDP communication on IO::Socket::INET for better portability
+        - add $Net::Radius::Client::debug
+        - add checking that dictionary file is readable
+
 0.02  Thu Feb  7 16:10:55 2008
         - module Net::Inet dependency added
         - POD layout improved

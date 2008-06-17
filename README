@@ -1,4 +1,4 @@
-Net/Radius/Client version 0.01
+Net/Radius/Client version 0.03
 ==============================
 
 The Net::Radius::Client package implements a single call, high-level
@@ -19,12 +19,11 @@ This module requires these other modules and libraries:
 
   Net::Radius::Packet
   Net::Radius::Dictionary
-  Net::Inet
-  Net::UDP
+  IO::Socket::INET
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2006 Ilya Etingof <ilya@glas.net>
+Copyright (C) 2008 Ilya Etingof <ilya@glas.net>
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. 

@@ -8,7 +8,7 @@ WriteMakefile(
     'PREREQ_PM'		=> {
         'Net::Radius::Dictionary' => 1.55,
         'Net::Radius::Packet'     => 1.55,
-	'Net::Inet'               => 1.0,
+	'IO::Socket::INET'        => 1.27,
     }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       ('ABSTRACT_FROM' => 'Client.pm', # retrieve abstract from module

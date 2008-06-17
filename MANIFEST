@@ -5,3 +5,4 @@ MANIFEST
 README
 t/1.t
 example/do-aaa.pl
+META.yml                                 Module meta-data (added by MakeMaker)
